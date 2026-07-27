@@ -2,12 +2,22 @@
 set -euo pipefail
 
 ALLOW_FILE_SHARING=0
-if [[ "${1:-}" == "--allow-file-sharing" ]]; then
-  ALLOW_FILE_SHARING=1
-elif [[ $# -gt 0 ]]; then
-  echo "Usage: sudo bash ./install.sh [--allow-file-sharing]" >&2
-  exit 2
-fi
+FORCE_REENROLL=0
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --allow-file-sharing)
+      ALLOW_FILE_SHARING=1
+      ;;
+    --reenroll)
+      FORCE_REENROLL=1
+      ;;
+    *)
+      echo "Usage: sudo bash ./install.sh [--allow-file-sharing] [--reenroll]" >&2
+      exit 2
+      ;;
+  esac
+  shift
+done
 
 if [[ "$(id -u)" -ne 0 ]]; then
   echo "Run this installer with sudo." >&2
@@ -37,6 +47,7 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install -y --no-install-recommends \
   ca-certificates \
+  openssh-server \
   python3 \
   resolvconf \
   wireguard-tools
@@ -50,19 +61,40 @@ ln -sfn /usr/local/lib/seer-client/seer_client.py /usr/local/bin/seer-client
 install -m 0644 "${SCRIPT_DIRECTORY}/systemd/seer-client.service" \
   /etc/systemd/system/seer-client.service
 
-invitation="${SEER_INVITATION:-}"
-if [[ -z "$invitation" ]]; then
-  read -r -s -p "Paste the invitation from the SEER VPN page: " invitation
-  echo
+EXISTING_NETWORK_CONFIG="/etc/wireguard/seer0.conf"
+EXISTING_INSTALLATION_ID="/var/lib/seer-client/installation-id"
+if [[ "$FORCE_REENROLL" -eq 0 &&
+      -s "$EXISTING_NETWORK_CONFIG" &&
+      -s "$EXISTING_INSTALLATION_ID" &&
+      -z "${SEER_INVITATION:-}" ]]; then
+  echo "Existing SEER enrollment found. Keeping this device identity."
+else
+  invitation="${SEER_INVITATION:-}"
+  if [[ -z "$invitation" ]]; then
+    read -r -s -p "Paste the invitation from the SEER VPN page: " invitation
+    echo
+  fi
+  if [[ -z "$invitation" ]]; then
+    echo "An invitation is required." >&2
+    exit 1
+  fi
+
+  printf '%s\n' "$invitation" \
+    | /usr/local/lib/seer-client/seer_client.py enroll --invitation-stdin
+  unset invitation SEER_INVITATION
 fi
-if [[ -z "$invitation" ]]; then
-  echo "An invitation is required." >&2
+
+systemctl enable --now ssh.service
+if ! systemctl is-active --quiet ssh.service; then
+  echo "The SSH service could not be started." >&2
+  systemctl --no-pager --full status ssh.service >&2 || true
   exit 1
 fi
 
-printf '%s\n' "$invitation" \
-  | /usr/local/lib/seer-client/seer_client.py enroll --invitation-stdin
-unset invitation SEER_INVITATION
+if command -v ufw >/dev/null 2>&1 && ufw status | grep -q '^Status: active'; then
+  ufw allow from 10.8.0.0/24 to any port 22 proto tcp \
+    comment 'SEER approved SSH'
+fi
 
 if [[ "$ALLOW_FILE_SHARING" -eq 1 ]] && command -v ufw >/dev/null 2>&1; then
   if ufw status | grep -q '^Status: active'; then
@@ -89,5 +121,12 @@ fi
 
 echo
 echo "SEER is installed and will reconnect automatically after every boot."
-echo "Private address: $(/usr/local/bin/seer-client address)"
+private_address="$(/usr/local/bin/seer-client address)"
+ssh_user="${SUDO_USER:-YOUR_UBUNTU_USERNAME}"
+if [[ -z "$ssh_user" || "$ssh_user" == "root" ]]; then
+  ssh_user="YOUR_UBUNTU_USERNAME"
+fi
+echo "Private address: ${private_address}"
+echo "SSH is ready for your existing Ubuntu user on the private address."
+echo "Connect with: ssh ${ssh_user}@${private_address}"
 echo "Check anytime with: sudo seer-client status"
