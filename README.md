@@ -18,7 +18,9 @@ sudo bash ./install.sh
 The installer asks for the 15-character alphanumeric invitation displayed on
 the SEER VPN page. Input is hidden and the invitation is not saved. The same
 invitation may be used to enroll several devices, while every installation
-receives unique credentials.
+receives unique credentials. It also installs and starts SSH, permits SSH from
+the SEER private network when UFW is active, and enables both services after
+every reboot. No additional service commands are required after installation.
 
 For an Ubuntu file server with UFW enabled, use:
 
@@ -49,6 +51,15 @@ Example: `smb://10.8.0.3/shared`
 The Ubuntu server also appears in **VPN > Connected Devices**. Its Device
 Details window shows the same private address.
 
+Connect from another device while that device is connected to SEER:
+
+```bash
+ssh YOUR_UBUNTU_USERNAME@PRIVATE_ADDRESS
+```
+
+Use the regular Ubuntu account created for the server. Ubuntu normally disables
+direct SSH login as `root`.
+
 ## Everyday commands
 
 ```bash
@@ -69,23 +80,21 @@ server is updated instead of creating a duplicate device.
 
 ## Repair an existing installation
 
-If the device was enrolled but the service log reports `Operation not
-permitted`, update only the service definition. This keeps the existing device
-identity and does not require another invitation:
+These commands are not part of a normal installation. To update or repair an
+existing installation, pull the latest release and rerun the same installer:
 
 ```bash
-cd seer-linux-client
-git pull
-sudo install -m 0644 systemd/seer-client.service /etc/systemd/system/seer-client.service
-sudo systemctl daemon-reload
-sudo systemctl reset-failed seer-client.service
-sudo systemctl restart seer-client.service
-sudo systemctl --no-pager --full status seer-client.service
+cd ~/seer-linux-client
+git pull --ff-only
+sudo bash ./install.sh
 ```
 
-The service should show `active (running)`. If the same permission error
-continues, confirm whether Ubuntu itself is allowed to administer network
-interfaces:
+The installer detects the existing enrollment and keeps the same device
+identity without requesting another invitation. Use `--reenroll` only when
+intentionally moving the device to a replacement SEER server.
+
+If an `Operation not permitted` error continues, confirm whether Ubuntu itself
+is allowed to administer network interfaces:
 
 ```bash
 sudo systemd-detect-virt
