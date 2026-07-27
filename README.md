@@ -67,6 +67,36 @@ Clone the replacement repository and run `sudo bash ./install.sh` with its
 new invitation. The stable installation identity is reused, so the same Ubuntu
 server is updated instead of creating a duplicate device.
 
+## Repair an existing installation
+
+If the device was enrolled but the service log reports `Operation not
+permitted`, update only the service definition. This keeps the existing device
+identity and does not require another invitation:
+
+```bash
+cd seer-linux-client
+git pull
+sudo install -m 0644 systemd/seer-client.service /etc/systemd/system/seer-client.service
+sudo systemctl daemon-reload
+sudo systemctl reset-failed seer-client.service
+sudo systemctl restart seer-client.service
+sudo systemctl --no-pager --full status seer-client.service
+```
+
+The service should show `active (running)`. If the same permission error
+continues, confirm whether Ubuntu itself is allowed to administer network
+interfaces:
+
+```bash
+sudo systemd-detect-virt
+sudo ip link add seer-permission-check type dummy
+sudo ip link delete seer-permission-check
+```
+
+If the test interface cannot be created, the Ubuntu installation is running
+inside a restricted virtual machine or container. Enable network-administrator
+capability for that guest on its host, then restart `seer-client.service`.
+
 ## Security notes
 
 - Never paste an invitation into a public issue, chat, screenshot, or command
