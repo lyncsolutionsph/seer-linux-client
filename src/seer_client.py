@@ -32,7 +32,9 @@ STATE_DIRECTORY = Path("/var/lib/seer-client")
 INSTALLATION_ID_FILE = STATE_DIRECTORY / "installation-id"
 NETWORK_CONFIG = Path(f"/etc/wireguard/{INTERFACE}.conf")
 MAX_RESPONSE_BYTES = 256 * 1024
-INVITATION_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{32,200}$")
+INVITATION_PATTERN = re.compile(
+    r"^(?:[A-Za-z0-9]{15}|[A-Za-z0-9._:-]{32,200})$"
+)
 FINGERPRINT_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 PRESENCE_MARKER = "# SEER-PRESENCE-URL:"
 stop_requested = False
