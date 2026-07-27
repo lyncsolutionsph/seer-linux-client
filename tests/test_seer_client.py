@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 
 MODULE_PATH = Path(__file__).parents[1] / "src" / "seer_client.py"
+PROJECT_ROOT = MODULE_PATH.parents[1]
 SPEC = importlib.util.spec_from_file_location("seer_client", MODULE_PATH)
 assert SPEC and SPEC.loader
 seer_client = importlib.util.module_from_spec(SPEC)
@@ -16,6 +17,24 @@ SPEC.loader.exec_module(seer_client)
 
 
 class SeerClientTests(unittest.TestCase):
+    def test_service_runs_as_system_administrator_without_privilege_lockout(self) -> None:
+        service = (PROJECT_ROOT / "systemd" / "seer-client.service").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("User=root", service)
+        self.assertIn("Group=root", service)
+        self.assertIn("NoNewPrivileges=false", service)
+        self.assertNotIn("NoNewPrivileges=true", service)
+        self.assertIn("StartLimitBurst=5", service)
+
+    def test_installer_checks_that_service_stays_running(self) -> None:
+        installer = (PROJECT_ROOT / "install.sh").read_text(encoding="utf-8")
+        self.assertIn(
+            "systemctl is-active --quiet seer-client.service",
+            installer,
+        )
+        self.assertIn("The installer did not report a successful connection.", installer)
+
     def test_release_config_requires_exact_secure_enrollment_path(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "release.conf"
