@@ -15,9 +15,10 @@ cd seer-linux-client
 sudo bash ./install.sh
 ```
 
-The installer asks for the invitation displayed on the SEER VPN page. Input is
-hidden and the invitation is not saved. The same invitation may be used to
-enroll several devices, while every installation receives unique credentials.
+The installer asks for the 15-character alphanumeric invitation displayed on
+the SEER VPN page. Input is hidden and the invitation is not saved. The same
+invitation may be used to enroll several devices, while every installation
+receives unique credentials.
 
 For an Ubuntu file server with UFW enabled, use:
 
