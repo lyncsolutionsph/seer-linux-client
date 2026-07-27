@@ -35,6 +35,14 @@ class SeerClientTests(unittest.TestCase):
         )
         self.assertIn("The installer did not report a successful connection.", installer)
 
+    def test_installer_makes_ssh_ready_without_reenrolling_existing_device(self) -> None:
+        installer = (PROJECT_ROOT / "install.sh").read_text(encoding="utf-8")
+        self.assertIn("openssh-server", installer)
+        self.assertIn("systemctl enable --now ssh.service", installer)
+        self.assertIn("from 10.8.0.0/24 to any port 22 proto tcp", installer)
+        self.assertIn("Existing SEER enrollment found.", installer)
+        self.assertIn("--reenroll", installer)
+
     def test_release_config_requires_exact_secure_enrollment_path(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "release.conf"
