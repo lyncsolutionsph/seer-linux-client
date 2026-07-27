@@ -72,7 +72,20 @@ if [[ "$ALLOW_FILE_SHARING" -eq 1 ]] && command -v ufw >/dev/null 2>&1; then
 fi
 
 systemctl daemon-reload
+systemctl reset-failed seer-client.service 2>/dev/null || true
 systemctl enable --now seer-client.service
+
+sleep 3
+if ! systemctl is-active --quiet seer-client.service; then
+  echo >&2
+  echo "SEER was enrolled, but the connection service could not stay running." >&2
+  echo "Recent service output:" >&2
+  journalctl -u seer-client.service -n 20 --no-pager >&2 || true
+  echo >&2
+  echo "The installer did not report a successful connection." >&2
+  echo "Run 'sudo journalctl -u seer-client -n 100 --no-pager' for details." >&2
+  exit 1
+fi
 
 echo
 echo "SEER is installed and will reconnect automatically after every boot."
