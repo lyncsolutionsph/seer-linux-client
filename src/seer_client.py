@@ -24,7 +24,7 @@ from urllib.request import Request, urlopen
 import uuid
 
 
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 INTERFACE = "seer0"
 SERVICE = "seer-client.service"
 RELEASE_CONFIG = Path("/etc/seer-client/release.conf")
