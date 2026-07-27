@@ -47,7 +47,7 @@ class SeerClientTests(unittest.TestCase):
                     seer_client.read_release_config(path)
 
     def test_enrollment_reports_linux_without_os_version(self) -> None:
-        invitation = "A" * 43
+        invitation = "A1B2C3D4E5F6G7H"
         with (
             patch.object(seer_client, "installation_id", return_value="test-device-installation"),
             patch.object(
@@ -65,6 +65,21 @@ class SeerClientTests(unittest.TestCase):
         self.assertEqual(payload["device"]["os"], "Linux")
         self.assertNotIn("Ubuntu", repr(payload))
         self.assertNotIn("22.04", repr(payload))
+
+    def test_invitation_accepts_new_code_and_existing_long_format(self) -> None:
+        with patch.object(
+            seer_client,
+            "installation_id",
+            return_value="test-device-installation",
+        ):
+            for invitation in ("A1B2C3D4E5F6G7H", "A" * 43):
+                self.assertEqual(
+                    json.loads(seer_client.enrollment_payload(invitation))["token"],
+                    invitation,
+                )
+            for invitation in ("A" * 14, "A1B2C3D4E5F6G7!"):
+                with self.assertRaises(seer_client.SeerClientError):
+                    seer_client.enrollment_payload(invitation)
 
     def test_presence_url_accepts_only_expected_private_service(self) -> None:
         good = (
@@ -89,4 +104,3 @@ class SeerClientTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
