@@ -12,7 +12,7 @@ Supported releases: Ubuntu Server/Desktop 22.04 LTS and 24.04 LTS.
 ```bash
 git clone https://github.com/lyncsolutionsph/seer-linux-client.git
 cd seer-linux-client
-sudo ./install.sh
+sudo bash ./install.sh
 ```
 
 The installer asks for the invitation displayed on the SEER VPN page. Input is
@@ -22,7 +22,7 @@ enroll several devices, while every installation receives unique credentials.
 For an Ubuntu file server with UFW enabled, use:
 
 ```bash
-sudo ./install.sh --allow-file-sharing
+sudo bash ./install.sh --allow-file-sharing
 ```
 
 That option opens only TCP port 445 and only to approved SEER private-network
@@ -62,7 +62,7 @@ sudo journalctl -u seer-client -n 100 --no-pager
 
 ## Reinstall or move to a replacement gateway
 
-Clone the replacement repository and run `sudo ./install.sh` with its
+Clone the replacement repository and run `sudo bash ./install.sh` with its
 new invitation. The stable installation identity is reused, so the same Ubuntu
 server is updated instead of creating a duplicate device.
 

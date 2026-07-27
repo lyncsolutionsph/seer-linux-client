@@ -5,7 +5,7 @@ ALLOW_FILE_SHARING=0
 if [[ "${1:-}" == "--allow-file-sharing" ]]; then
   ALLOW_FILE_SHARING=1
 elif [[ $# -gt 0 ]]; then
-  echo "Usage: sudo ./install.sh [--allow-file-sharing]" >&2
+  echo "Usage: sudo bash ./install.sh [--allow-file-sharing]" >&2
   exit 2
 fi
 
