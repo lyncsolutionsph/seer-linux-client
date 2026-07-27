@@ -2,19 +2,22 @@
 Description=SEER secure network client
 Wants=network-online.target
 After=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
 
 [Service]
 Type=simple
+User=root
+Group=root
 ExecStart=/usr/local/lib/seer-client/seer_client.py run
 Restart=on-failure
 RestartSec=10
 TimeoutStartSec=30
 TimeoutStopSec=20
 KillSignal=SIGTERM
-NoNewPrivileges=true
+NoNewPrivileges=false
 PrivateTmp=true
 ProtectHome=true
 
 [Install]
 WantedBy=multi-user.target
-
