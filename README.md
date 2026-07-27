@@ -1,6 +1,6 @@
 # SEER Linux Client
 
-This private client adds an Ubuntu server to an approved SEER Virtual Private
+This client adds an Ubuntu desktop or server to an approved SEER Virtual Private
 Network. Each installation receives its own identity and private address,
 reports its Linux hostname/model to the SEER VPN page, and reconnects
 automatically after a reboot.
@@ -8,8 +8,6 @@ automatically after a reboot.
 ## Install on Ubuntu
 
 Supported releases: Ubuntu Server/Desktop 22.04 LTS and 24.04 LTS.
-The GitHub account used on the Ubuntu server must have access to this private
-repository.
 
 ```bash
 git clone https://github.com/lyncsolutionsph/seer-linux-client.git
@@ -64,13 +62,12 @@ sudo journalctl -u seer-client -n 100 --no-pager
 
 ## Reinstall or move to a replacement gateway
 
-Clone the replacement private repository and run `sudo ./install.sh` with its
+Clone the replacement repository and run `sudo ./install.sh` with its
 new invitation. The stable installation identity is reused, so the same Ubuntu
 server is updated instead of creating a duplicate device.
 
 ## Security notes
 
-- This repository must remain private.
 - Never paste an invitation into a public issue, chat, screenshot, or command
   line argument.
 - The generated device configuration is root-only (`0600`).
